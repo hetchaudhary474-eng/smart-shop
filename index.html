@@ -4,18 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Smart Shop</title>
-<script>
-// ===== ROZ KE RATE YAHAN BADLO =====
-// Sirf naam aur number badlo. Comma aur bracket waise hi rakho.
-const RATES = [
-  ["Patang (10 ka set)", 100],
-  ["manja", 800],
-  ["Cotton manja", 1200],
-  ["Cap", 60],
-  ["Chashma", 50]
-];
-// ===================================
-</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Mukta:wght@400;600;700&display=swap">
 <style>
 /* Layout: aasman header me countdown, neeche shubhkamna, patang order, suraksha */
@@ -128,12 +116,16 @@ ul{margin:0;padding-left:20px}
 const SHOP = "Smart Shop", OWNER = "Owner :- HET CHAUDHARY";
 const $ = id => document.getElementById(id);
 const qty = [], cards = {};
+// Ye rate tab dikhte hain jab rates.json na mile.
+let RATES = [["Patang (10 ka set)", 60], ["Firki 5000 m", 1300], ["Cotton manja", 800], ["Cap", 60], ["Chashma", 50]];
 $("open").addEventListener("click", () => { $("cover").hidden = true; $("app").hidden = false; scrollTo(0, 0); });
 const now = new Date(), today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
 const left = Math.round((Date.UTC(2027, 0, 14) - today) / 864e5);
 $("days").textContent = left > 0 ? left + " din" : left === 0 ? "Aaj hai!" : "Ho gaya";
 $("when").textContent = left > 0 ? "baaki, 14 January 2027 tak" : "14 January 2027";
 
+function build() {
+$("items").textContent = ""; qty.length = 0;
 RATES.forEach(([n, p], i) => {
   const l = document.createElement("label"); l.className = "item";
   const span = document.createElement("span"); span.textContent = `${n}, ₹${p}`;
@@ -141,6 +133,8 @@ RATES.forEach(([n, p], i) => {
   q.addEventListener("input", () => { qty[i] = Math.max(0, Math.min(999, Math.floor(+q.value || 0))); render(); });
   l.append(span, q); $("items").appendChild(l);
 });
+}
+build();
 function link(a, text) {
   a.setAttribute("aria-disabled", String(!text));
   if (text) a.href = `https://wa.me/?text=${encodeURIComponent(text)}`; else a.removeAttribute("href");
@@ -227,6 +221,14 @@ $("wishmake").addEventListener("click", async () => {
   $("wishimg").src = url; $("wishsave").href = url; $("wishphoto").hidden = false;
 });
 render();
+fetch("rates.json?t=" + Date.now(), { cache: "no-store" })
+  .then(r => r.ok ? r.json() : null)
+  .then(data => {
+    if (!Array.isArray(data?.items)) return;
+    RATES = data.items.map(x => [String(x.n || "").trim(), Math.max(0, +x.p || 0)]).filter(([n, p]) => n && p);
+    build(); render();
+  })
+  .catch(() => {});
 </script>
 </body>
 </html>
